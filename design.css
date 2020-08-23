@@ -2,6 +2,9 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Recursive', sans-serif;
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.7);
 }
 
 body {
@@ -10,9 +13,9 @@ body {
   justify-content: center;
   height: 100vh;
   background:  
-    linear-gradient(217deg, rgba(221, 255, 247, 0.5), rgba(255, 0, 0, 0) 70%),
-    linear-gradient(127deg, rgba(255, 166, 96, 0.6), rgba(255, 0, 0, 0) 50%),
-    linear-gradient(336deg, rgba(147, 255, 216, 0.5), rgba(255, 0, 0, 0) 50%);
+    linear-gradient(217deg, rgba(221, 255, 247, 0.7), rgba(255, 0, 0, 0) 70%),
+    linear-gradient(127deg, rgba(255, 166, 96, 0.7), rgba(255, 0, 0, 0) 70%),
+    linear-gradient(336deg, rgba(147, 255, 216, 0.7), rgba(255, 0, 0, 0) 70%);
 }
 
 .container {
@@ -28,7 +31,7 @@ body {
   grid-column-end: 5;
   border: 1px solid rgba(189, 189, 189, 0.3);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .input {
@@ -40,4 +43,30 @@ body {
 .input:hover {
   border: 2px solid rgba(189, 189, 189, 0.3);
   background: rgba(255, 255, 255, 0.7);
+}
+
+.input:focus {
+  outline:unset;
+}
+
+.superscript {
+  font-size: 13px;
+}
+
+.previous-calculations, .current-calculation {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.previous-calculations {
+  height: 50px;
+  padding: 10px;
+}
+
+.current-calculation {
+  height: 75px;
+  font-size: 30px;
+  padding: 10px;
 }
