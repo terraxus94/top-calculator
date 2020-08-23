@@ -1,11 +1,12 @@
 let buttons = document.querySelectorAll("button");
 let currCalc = document.querySelector(".current-calculation"); // lower portion of the display wehere the user inputs new data
 let prevCalc = document.querySelector(".previous-calculations"); // upper part of the display
-let numbers = [];
-let operators = [];
-let operatorsDump = [];
 let currInput = "";
 let finalResult;
+let operatorsCounter = 0;
+let numbers = [];
+let currOperator = [];
+let operatorSequence = [];
 
 buttons.forEach((e) => {
   e.addEventListener("click", input);
@@ -14,10 +15,11 @@ buttons.forEach((e) => {
 function input(e) {
   let inputType = Object.keys(e.target.dataset)[0];
   let inputValue = Object.values(e.target.dataset)[0];
+  currCalc.textContent = '';
 
   switch (inputType) {
     case "clear":
-      operators = [];
+      currOperator = [];
       numbers = [];
       prevCalc.textContent = "";
       currCalc.textContent = "";
@@ -26,12 +28,13 @@ function input(e) {
       currCalc.textContent = "";
       break;
     case "operator":
-      operatorsDump.push(inputValue);
+      operatorsCounter++;
+      operatorSequence.push(inputValue);
       operatorCalculation(inputValue);
       break;
     default:
-      currCalc.textContent += inputValue;
       currInput += inputValue;
+      currCalc.textContent += currInput;
       break;
   }
 }
@@ -40,19 +43,22 @@ function operatorCalculation(operator) {
   // not all operator values match their 'real world' counterparts, updates the upper line accordingly
   switch (operator) {
     case "=":
-      if (currCalc.textContent != 0) {
+      if (currInput != 0) {
         updatePreviousCalculation(currInput);
       } else return;
-      if (operators.length == 0) {
-        operators.push(operatorsDump[operatorsDump.length - 1])
+      if (currOperator.length == 0) {
+        currOperator.push(operatorSequence[operatorSequence.length - 1]);
       }
       pushToNumbers(currInput);
       calculate();
       currCalc.textContent = finalResult;
       break;
-    case "sq":
+    case "sq": // find a way to run calculate before running calculate (square) to ensure all previous operations have been executed and we only have one number to work with
       pushToNumbers(currInput);
-      operators.push(operator);
+      // if (operatorsCounter > 1) {   
+      //   calculate();
+      // }
+      currOperator.push(operator);
       if (currCalc.textContent == "") {
         currInput = numbers[0];
         prevCalc.textContent = "";
@@ -62,27 +68,28 @@ function operatorCalculation(operator) {
       calculate();
       currCalc.textContent = finalResult;
       break;
-    case "sqrt":
+    case "sqrt": // doesnt work
       pushToNumbers(currInput);
-      operators.push(operator);
-      updatePreviousCalculation("√");
+      calculate();
+      currOperator.push(operator);
       if (currCalc.textContent == "") {
         currInput = numbers[0];
         prevCalc.textContent = "";
       }
+      updatePreviousCalculation("√");
       updatePreviousCalculation(currInput);
       calculate();
       currCalc.textContent = finalResult;
       break;
     default:
       pushToNumbers(currInput);
-      operators.push(operator);
+      currOperator.push(operator);
       updatePreviousCalculation(currInput);
       updatePreviousCalculation(operator);
       if (numbers.length > 1) {
         calculate();
       } else {
-        operators.push(operator)
+        currOperator.push(operator);
       }
       currCalc.textContent = finalResult;
 
@@ -92,14 +99,15 @@ function operatorCalculation(operator) {
 }
 
 function calculate() {
-  if (operators[0] == "sq" || operators[0] == "sqrt") {
-    finalResult = operationResult(operators[0], numbers[0]);
+  console.log(numbers);
+  if (currOperator[0] == "sq" || currOperator[0] == "sqrt") {
+    finalResult = operationResult(currOperator[0], numbers[0]);
   } else {
-    finalResult = operationResult(operatorsDump[operatorsDump.length - 2], numbers[0], numbers[1]);
+    finalResult = operationResult(operatorSequence[operatorSequence.length - 2], numbers[0], numbers[1]);
   }
   numbers[0] = finalResult;
   numbers.splice(1, 1);
-  operators = [];
+  currOperator = [];
   console.log(numbers);
 }
 
@@ -161,14 +169,14 @@ function squareRoot(a) {
 }
 
 function pushToNumbers(e) {
-  if (currCalc.textContent != 0) {
+  if (currInput != 0) { //changed from currCalc.textcontent to currninput because I keep forgetting that I have that
     numbers.push(Number(e));
     currCalc.textContent = "";
   } else return;
 }
 
-// round numbers to 2 decimal places - done
+// round numbers to 2 decimal places
 // if previous calculations exceeds max number of chars calcl result, display and disable all buttons aside from C (apply class that changes colour)
 // overflow of the lower box
 // first input cannot be an operator
-// clicking an operator after sq or sqrt repeats that action even though operators array is empty
+// clicking an operator after sq or sqrt repeats that action even though currOperator array is empty
