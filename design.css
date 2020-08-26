@@ -1,3 +1,12 @@
+@font-face {
+  font-family: 'segment7standard';
+  src: url('segment7standard-webfont.woff2') format('woff2'),
+    url('segment7standard-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -12,7 +21,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background:  
+  background:
     linear-gradient(217deg, rgba(221, 255, 247, 0.7), rgba(255, 0, 0, 0) 70%),
     linear-gradient(127deg, rgba(255, 166, 96, 0.7), rgba(255, 0, 0, 0) 70%),
     linear-gradient(336deg, rgba(147, 255, 216, 0.7), rgba(255, 0, 0, 0) 70%);
@@ -46,14 +55,15 @@ body {
 }
 
 .input:focus {
-  outline:unset;
+  outline: unset;
 }
 
 .superscript {
   font-size: 13px;
 }
 
-.previous-calculations, .current-calculation {
+.previous-calculations,
+.current-calculation {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
@@ -69,4 +79,10 @@ body {
   height: 75px;
   font-size: 30px;
   padding: 10px;
+}
+
+.error {
+  font-family: 'segment7standard';
+  font-size: 50px;
+
 }
