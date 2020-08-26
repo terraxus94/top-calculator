@@ -1,15 +1,27 @@
 let buttons = document.querySelectorAll("button");
 let currCalc = document.querySelector(".current-calculation"); // lower portion of the display wehere the user inputs new data
 let prevCalc = document.querySelector(".previous-calculations"); // upper part of the display
-let currInput = "";
+let currInput = '';
 let finalResult;
 let operatorsCounter = 0;
+let clickCounter = 0;
 let numbers = [];
 let currOperator = [];
 let operatorSequence = [];
 
 buttons.forEach((e) => {
-  e.addEventListener("click", input);
+  e.addEventListener("click", (e) => {
+    let inputType = Object.keys(e.target.dataset)[0];
+    if ((inputType == 'operator') || (inputType == 'clear') || (inputType == 'delete')) { // first input must be a number
+      if (clickCounter == 0) {} else {
+        input(e);
+        clickCounter++;
+      }
+    } else {
+      input(e);
+      clickCounter++;
+    };
+  });
 });
 
 function input(e) {
@@ -19,12 +31,19 @@ function input(e) {
 
   switch (inputType) {
     case "clear":
+      currCalc.textContent = "";
+      prevCalc.textContent = "";
+      operatorsCounter = 0;
+      clickCounter = 0;
+      numbers = [];
+      currOperator = [];
+      operatorSequence = [];
+      currInput = '';
       currOperator = [];
       numbers = [];
-      prevCalc.textContent = "";
-      currCalc.textContent = "";
       break;
     case "delete":
+      currInput = '';
       currCalc.textContent = "";
       break;
     case "operator":
@@ -43,7 +62,7 @@ function operatorCalculation(operator) {
   // not all operator values match their 'real world' counterparts, updates the upper line accordingly
   switch (operator) {
     case "=":
-      if (currInput != 0) {
+      if (currInput != '') {
         updatePreviousCalculation(currInput);
       } else return;
       if (currOperator.length == 0) {
@@ -100,9 +119,7 @@ function operatorCalculation(operator) {
       updatePreviousCalculation(operator);
       if (numbers.length > 1) {
         calculate();
-      } else {
-        // currOperator.push(operator);
-      }
+      };
       updateCurrCalc(finalResult);
       break;
   }
@@ -115,6 +132,9 @@ function calculate() {
   console.log(`currOperator ${currOperator}`);
   console.log(`operatorSequence ${operatorSequence}`);
   if (currOperator[0] == "sq" || currOperator[0] == "sqrt") {
+    if (numbers[0] == '0') { // find a way to apply everywere
+      return currCalc.innerHTML = "<span class='error'>Error</span>";
+    }
     finalResult = operationResult(currOperator[0], numbers[0]);
   } else {
     finalResult = operationResult(operatorSequence[operatorSequence.length - 2], numbers[0], numbers[1]);
@@ -172,6 +192,10 @@ function multiply(a, b) {
 }
 
 function divide(a, b) {
+  console.log(a, b);
+  if (b == '0') {
+    return currCalc.innerHTML = "<span class='error'>Error</span>";
+  }
   return Number(a) / Number(b);
 }
 
@@ -182,25 +206,25 @@ function squareRoot(a) {
 function updateCurrCalc(e) {
   if (e == undefined) {
     return;
-  }
-   else if (e.toString().includes(".")) {
+  } else if (e.toString().includes(".")) {
     currCalc.textContent = e.toFixed(2);
   } else {
     currCalc.textContent = e;
   }
-  // currCalc.textContent = finalResult;
 }
 
 function pushToNumbers(e) {
-  if (currInput != 0) {   //changed from currCalc.textcontent to currninput because I keep forgetting that I have that
+  if (currInput != '') { //changed from currCalc.textcontent to currninput because I keep forgetting that I have that
     numbers.push(Number(e));
     currCalc.textContent = "";
   } else return;
 }
 
 // round numbers to 2 decimal places - done
+// set up c/ce - done
+// first input cannot be an operator - done
 // if previous calculations exceeds max number of chars calcl result, display and disable all buttons aside from C (apply class that changes colour)
 // overflow of the lower box
-// first input cannot be an operator
 // clicking an operator after sq or sqrt repeats that action even though currOperator array is empty
-// divide by 0
+// divide by 0 - zero doesn't get pushed to numbers
+// keyboard inpu
