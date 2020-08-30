@@ -1,59 +1,156 @@
 let buttons = document.querySelectorAll("button");
-let currCalc = document.querySelector(".current-calculation"); // lower portion of the display wehere the user inputs new data
+let currCalc = document.querySelector(".current-calculation"); // lower portion of the display 
 let prevCalc = document.querySelector(".previous-calculations"); // upper part of the display
-let currInput = '';
-let finalResult;
-let operatorsCounter = 0;
+let finalResult, inputType, inputValue, keyboardType, keyboardValue, wasOverflowed;
+let operators = '=+-xsqsqrt÷';
+let numbers = '1234567890.'
 let clickCounter = 0;
-let numbers = [];
+let operatorsCounter = 0;
+let currCalcLimit = 17;
+let prevCalcLimit = 25;
+let isKeyboardInput = false;
+let currInput = '';
+let numberSequence = [];
 let currOperator = [];
 let operatorSequence = [];
+let inputSequence = [];
+
+document.addEventListener('keydown', e => {
+  keyboardInput(e.key);
+})
+
+function keyboardInput(e) {
+  isKeyboardInput = true
+  if ((e == 's') || (e == 'q') || (e == 'r') || (e == 't')) {
+    return;
+  }
+
+  if (numbers.includes(e)) {
+    keyboardType = 'number';
+    keyboardValue = e;
+    eventCleanup();
+
+  }
+
+  if (e == 'Delete') {
+    keyboardType = 'clear';
+    keyboardValue = e;
+    eventCleanup();
+
+  }
+
+  if (e == 'Backspace') {
+    keyboardType = 'delete';
+    keyboardValue = e;
+    eventCleanup();
+
+  }
+
+  if (operators.includes(e)) {
+    keyboardType = 'operator';
+    keyboardValue = e;
+    eventCleanup();
+
+  }
+
+  if (e == '/') {
+    keyboardType = 'operator';
+    keyboardValue = '÷';
+    eventCleanup();
+
+  }
+
+  if (e == 'Enter') {
+    keyboardType = 'operator';
+    keyboardValue = '=';
+    eventCleanup();
+  }
+}
 
 buttons.forEach((e) => {
-  e.addEventListener("click", (e) => {
-    let inputType = Object.keys(e.target.dataset)[0];
-    if ((inputType == 'operator') || (inputType == 'clear') || (inputType == 'delete')) { // first input must be a number
-      if (clickCounter == 0) {} else {
-        input(e);
-        clickCounter++;
-      }
-    } else {
-      input(e);
-      clickCounter++;
-    };
+  e.addEventListener("click", e => {
+    isKeyboardInput = false;
+    eventCleanup(e);
   });
 });
 
-function input(e) {
-  let inputType = Object.keys(e.target.dataset)[0];
-  let inputValue = Object.values(e.target.dataset)[0];
-  currCalc.textContent = '';
+function eventCleanup(e) {
+  if (wasOverflowed) {
+    resetEverything();
+    wasOverflowed = false;
+  }
+  if (currCalc.textContent == 'Error') {
+    resetEverything();
+  }
 
-  switch (inputType) {
+  if (isKeyboardInput) {
+    inputType = keyboardType;
+    inputValue = keyboardValue;
+  } else {
+    inputType = Object.keys(e.target.dataset)[0];
+    inputValue = Object.values(e.target.dataset)[0];
+  }
+  isKeyboardInput = false;
+
+  if (currInput.length >= currCalcLimit) {
+    if (inputType == 'operator') {
+      input(inputType, inputValue);
+      clickCounter++;
+    }
+  } else if (currCalc.textContent == '') {
+    if (inputType == 'number') {
+      input(inputType, inputValue);
+      clickCounter++;
+    }
+  } else if (currInput != '') {
+    input(inputType, inputValue);
+    clickCounter++;
+  } else if (!isNaN(inputSequence[inputSequence.length - 1])) {
+    if (inputType == 'operator') {
+      input(inputType, inputValue);
+      clickCounter++;
+    }
+  } else if (inputSequence[inputSequence.length - 1] == '=') {
+    if (inputType == 'operator') {
+      input(inputType, inputValue);
+      clickCounter++;
+    }
+  }
+  else if (operators.includes(inputSequence[inputSequence.length - 1])) {
+    if (inputType == 'number') {
+      input(inputType, inputValue);
+      clickCounter++;
+    }
+  }
+  limitOverflow(); //might not be the best position for this
+}
+
+function input(type, value) {
+  currCalc.textContent = '';
+  switch (type) {
     case "clear":
-      currCalc.textContent = "";
-      prevCalc.textContent = "";
-      operatorsCounter = 0;
-      clickCounter = 0;
-      numbers = [];
-      currOperator = [];
-      operatorSequence = [];
-      currInput = '';
-      currOperator = [];
-      numbers = [];
+      resetEverything();
       break;
     case "delete":
       currInput = '';
       currCalc.textContent = "";
       break;
     case "operator":
+      if (currInput != '') {
+        inputSequence.push(currInput);
+      }
+      inputSequence.push(value)
       operatorsCounter++;
-      operatorSequence.push(inputValue);
-      operatorCalculation(inputValue);
+      operatorSequence.push(value);
+      operatorCalculation(value);
       break;
     default:
-      currInput += inputValue;
-      currCalc.textContent += currInput;
+      if ((value == '.') && (currInput.includes('.'))) {
+        currCalc.textContent = currInput;
+      } else {
+        currInput += value;
+        currCalc.textContent += currInput;
+      }
       break;
   }
 }
@@ -63,61 +160,68 @@ function operatorCalculation(operator) {
   switch (operator) {
     case "=":
       if (currInput != '') {
-        updatePreviousCalculation(currInput);
+        updatePrevCalc(currInput);
       } else return;
       if (currOperator.length == 0) {
         currOperator.push(operatorSequence[operatorSequence.length - 1]);
       }
       pushToNumbers(currInput);
       calculate();
-      updateCurrCalc(finalResult);
+      if (!(currCalc.textContent == 'Error')) {
+        updateCurrCalc(finalResult);
+      }
+      inputSequence.push(finalResult);
       break;
     case "sq":
+      prevCalc.textContent = '';
       if (operatorsCounter == 1) {
         pushToNumbers(currInput);
         currOperator.push(operator);
-      } else if ((operatorSequence[operatorSequence.length - 2] == '=') || (operatorSequence[operatorSequence.length - 1] == '=')) {
+      } else if ((operatorSequence[operatorSequence.length - 2] == '=') || (operatorSequence[operatorSequence.length - 1] == '=') || (operatorSequence[operatorSequence.length - 2] == 'sq')) {
         pushToNumbers(multiply(finalResult, finalResult));
+        updatePrevCalc(finalResult);
+        updatePrevCalc("²");
         finalResult = multiply(finalResult, finalResult)
-        prevCalc.textContent = '';
-        updatePreviousCalculation(finalResult);
-        updatePreviousCalculation("²");
+        inputSequence.push(finalResult);
         return updateCurrCalc(finalResult);
       } else {
         pushToNumbers(multiply(currInput, currInput));
         currOperator[0] = operatorSequence[operatorSequence.length - 2];
       }
-      updatePreviousCalculation(currInput);
-      updatePreviousCalculation("²");
+      updatePrevCalc(currInput);
+      updatePrevCalc("²");
       calculate();
       updateCurrCalc(finalResult);
+      inputSequence.push(finalResult);
       break;
     case "sqrt":
+      prevCalc.textContent = '';
       if (operatorsCounter == 1) {
         pushToNumbers(currInput);
         currOperator.push(operator);
-      } else if ((operatorSequence[operatorSequence.length - 2] == '=') || (operatorSequence[operatorSequence.length - 1] == '=')) {
+      } else if ((operatorSequence[operatorSequence.length - 2] == '=') || (operatorSequence[operatorSequence.length - 1] == '=') || (operatorSequence[operatorSequence.length - 2] == 'sqrt')) {
         pushToNumbers(squareRoot(finalResult));
+        updatePrevCalc("√");
+        updatePrevCalc(finalResult);
         finalResult = squareRoot(finalResult)
-        prevCalc.textContent = '';
-        updatePreviousCalculation("√");
-        updatePreviousCalculation(finalResult);
+        inputSequence.push(finalResult);
         return updateCurrCalc(finalResult);
       } else {
         pushToNumbers(squareRoot(currInput));
         currOperator[0] = operatorSequence[operatorSequence.length - 2];
       }
-      updatePreviousCalculation("√");
-      updatePreviousCalculation(currInput);
+      updatePrevCalc("√");
+      updatePrevCalc(currInput);
       calculate();
       updateCurrCalc(finalResult);
+      inputSequence.push(finalResult);
       break;
     default:
       pushToNumbers(currInput);
       currOperator.push(operator);
-      updatePreviousCalculation(currInput);
-      updatePreviousCalculation(operator);
-      if (numbers.length > 1) {
+      updatePrevCalc(currInput);
+      updatePrevCalc(operator);
+      if (numberSequence.length > 1) {
         calculate();
       };
       updateCurrCalc(finalResult);
@@ -127,26 +231,18 @@ function operatorCalculation(operator) {
 }
 
 function calculate() {
-  console.log('-----');
-  console.log(`numbers ${numbers}`);
-  console.log(`currOperator ${currOperator}`);
-  console.log(`operatorSequence ${operatorSequence}`);
   if (currOperator[0] == "sq" || currOperator[0] == "sqrt") {
-    if (numbers[0] == '0') { // find a way to apply everywere
-      return currCalc.innerHTML = "<span class='error'>Error</span>";
-    }
-    finalResult = operationResult(currOperator[0], numbers[0]);
+    finalResult = operationResult(currOperator[0], numberSequence[0]);
   } else {
-    finalResult = operationResult(operatorSequence[operatorSequence.length - 2], numbers[0], numbers[1]);
+    if (((numberSequence[1] == 0) || (numberSequence[1] == '0')) && (operatorSequence[operatorSequence.length - 2] == '÷')) {
+      currCalc.innerHTML = "<span class='error'>Error</span>";
+      return;
+    }
+    finalResult = operationResult(operatorSequence[operatorSequence.length - 2], numberSequence[0], numberSequence[1]);
   }
-  numbers[0] = finalResult;
-  numbers.splice(1, 1);
+  numberSequence[0] = finalResult;
+  numberSequence.splice(1, 1);
   currOperator = [];
-  console.log(`numbers ${numbers}`);
-  console.log(`currOperator ${currOperator}`);
-  console.log(`operatorSequence ${operatorSequence}`);
-  console.log('-----');
-
 }
 
 function operationResult(operator, a, b = a) {
@@ -175,8 +271,25 @@ function operationResult(operator, a, b = a) {
   }
 }
 
-function updatePreviousCalculation(a) {
-  return (prevCalc.textContent += a);
+function updatePrevCalc(e) {
+  if (e == undefined) {
+    return;
+  } else if (e.toString().includes('.')) {
+    prevCalc.textContent += Number(e).toFixed(2);
+  } else {
+    prevCalc.textContent += e;
+  }
+
+}
+
+function updateCurrCalc(e) {
+  if (e == undefined) {
+    return;
+  } else if (e.toString().includes('.')) {
+    currCalc.textContent = e.toFixed(2);
+  } else {
+    currCalc.textContent = e;
+  }
 }
 
 function sum(a, b) {
@@ -192,10 +305,6 @@ function multiply(a, b) {
 }
 
 function divide(a, b) {
-  console.log(a, b);
-  if (b == '0') {
-    return currCalc.innerHTML = "<span class='error'>Error</span>";
-  }
   return Number(a) / Number(b);
 }
 
@@ -203,28 +312,46 @@ function squareRoot(a) {
   return Math.sqrt(Number(a));
 }
 
-function updateCurrCalc(e) {
-  if (e == undefined) {
-    return;
-  } else if (e.toString().includes(".")) {
-    currCalc.textContent = e.toFixed(2);
-  } else {
-    currCalc.textContent = e;
-  }
-}
-
 function pushToNumbers(e) {
-  if (currInput != '') { //changed from currCalc.textcontent to currninput because I keep forgetting that I have that
-    numbers.push(Number(e));
-    currCalc.textContent = "";
+  if (e != '') {
+    numberSequence.push(Number(e));
+    currCalc.textContent = '';
   } else return;
 }
 
-// round numbers to 2 decimal places - done
-// set up c/ce - done
-// first input cannot be an operator - done
-// if previous calculations exceeds max number of chars calcl result, display and disable all buttons aside from C (apply class that changes colour)
-// overflow of the lower box
-// clicking an operator after sq or sqrt repeats that action even though currOperator array is empty
-// divide by 0 - zero doesn't get pushed to numbers
-// keyboard inpu
+function limitOverflow() {
+  if ((currInput.length + prevCalc.textContent.length) >= prevCalcLimit) { //checks whether the number currently being entered is going to overflow
+    fakeEqualsClick();
+    wasOverflowed = true;
+  }
+}
+
+function fakeEqualsClick() {
+  if (currInput != '') {
+    inputSequence.push(currInput);
+  }
+  inputSequence.push('=')
+  operatorsCounter++;
+  operatorSequence.push('=');
+  operatorCalculation('=');
+}
+
+function resetEverything() {
+  currCalc.textContent = '';
+  prevCalc.textContent = '';
+  operatorsCounter = 0;
+  clickCounter = 0;
+  numberSequence = [];
+  currOperator = [];
+  operatorSequence = [];
+  currInput = '';
+  currOperator = [];
+  finalResult = '';
+}
+
+
+// to do
+// find out how to write tests for this
+// if (reader.name == 'duda') {how often to functionalise a certain thing? for example checking if e is number or operator or smt?}
+// repeated squaring leads to overflow
+// sqrt sq one after another don't work
